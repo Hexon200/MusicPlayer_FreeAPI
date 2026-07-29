@@ -402,19 +402,22 @@ if (isDev) {
   app.get(/.*/, (_req, res) => res.sendFile('index.html', { root: 'dist' }));
 }
 
-function listen(startPort) {
-  const server = app.listen(startPort, '127.0.0.1', () => {
-    port = startPort;
-    console.log(`AuraSound Music Engine server running at http://127.0.0.1:${port}/`);
-  });
-  server.on('error', (error) => {
-    if (error.code === 'EADDRINUSE' && startPort < 5199) {
-      console.log(`Port ${startPort} is in use, trying ${startPort + 1}...`);
-      listen(startPort + 1);
-      return;
-    }
-    throw error;
-  });
+if (!process.env.VERCEL) {
+  function listen(startPort) {
+    const server = app.listen(startPort, '127.0.0.1', () => {
+      port = startPort;
+      console.log(`AuraSound Music Engine server running at http://127.0.0.1:${port}/`);
+    });
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE' && startPort < 5199) {
+        console.log(`Port ${startPort} is in use, trying ${startPort + 1}...`);
+        listen(startPort + 1);
+        return;
+      }
+      throw error;
+    });
+  }
+  listen(port);
 }
 
-listen(port);
+export default app;
