@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>AuraSound - Music Streaming</title>
+  <meta name="description" content="Spotify-inspired JioSaavn discovery UI with mainstream tracks, artists, playlists, library, and official listening links." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231DB954'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.68 14.03c-.17.28-.53.36-.81.19-2.22-1.36-5.02-1.67-8.31-.91-.32.07-.63-.13-.7-.44-.07-.32.13-.63.44-.7 3.6-.82 6.69-.46 9.19 1.07.28.17.36.53.19.79zm1.15-2.56c-.21.34-.66.45-1 .24-2.54-1.56-6.42-2.01-9.43-1.1-.38.12-.79-.1-.9-.48-.12-.38.1-.79.48-.9 3.43-1.04 7.7-.54 10.61 1.25.34.21.45.66.24.99zm.1-2.66C14.88 9 9.85 8.83 6.94 9.75c-.46.14-.95-.11-1.09-.57-.14-.46.11-.95.57-1.09 3.34-1.05 8.89-.85 12.39 1.23.42.25.55.78.3 1.2-.24.41-.78.54-1.18.29z'/></svg>" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+<body>
+  <div id="app" class="spotify-shell">
+    <aside class="side-nav" aria-label="Primary navigation">
+      <div class="brand-header">
+        <a class="brand" href="#home" data-view="home" aria-label="AuraSound home">
+          <div class="brand-logo"><i data-lucide="radio"></i></div>
+          <div class="brand-text">
+            <h1>AuraSound</h1>
+          </div>
+        </a>
+        <div class="brand-actions">
+          <button id="btn-sidebar-create-playlist" class="btn-sidebar-toggle" type="button" aria-label="Create new playlist" title="Create Playlist">
+            <i data-lucide="plus"></i>
+          </button>
+          <button id="btn-toggle-sidebar" class="btn-sidebar-toggle" type="button" aria-label="Toggle compact sidebar" title="Collapse sidebar to icons">
+            <i data-lucide="panel-left-close"></i>
+          </button>
+        </div>
+      </div>
+      <nav class="nav-list">
+        <button class="nav-item active" type="button" data-view="home"><i data-lucide="home"></i><span>Home</span></button>
+        <button class="nav-item" type="button" data-view="search"><i data-lucide="search"></i><span>Search</span></button>
+        <button class="nav-item" type="button" data-view="library"><i data-lucide="library"></i><span>Your Library</span></button>
+        <button class="nav-item" type="button" id="btn-nav-favorites"><i data-lucide="heart"></i><span>Favorite Songs</span></button>
+      </nav>
+      <div class="sidebar-section liked-artists-sidebar-section">
+        <div class="sidebar-section-head">
+          <div class="sidebar-section-title">
+            <i data-lucide="users"></i>
+            <strong>Liked Artists</strong>
+          </div>
+          <span id="sidebar-liked-artists-count" class="sidebar-count-badge">0</span>
+        </div>
+        <div id="sidebar-liked-artists-list" class="sidebar-liked-artists-list"></div>
+      </div>
+    </aside>
+
+    <div id="resizer-left" class="sidebar-resizer resizer-left" role="separator" aria-label="Resize left sidebar" title="Drag to resize left sidebar"></div>
+
+    <main class="main-stage" id="main-content">
+      <header class="top-bar">
+        <div class="mobile-brand"><div class="brand-logo"><i data-lucide="radio"></i></div><strong>AuraSound</strong></div>
+        <form id="search-form" class="search-pill" role="search">
+          <i data-lucide="search"></i>
+          <input id="global-search" type="search" placeholder="What do you want to listen to?" autocomplete="off" />
+          <button type="submit" aria-label="Search"><i data-lucide="arrow-right"></i></button>
+          <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Search suggestions"></div>
+        </form>
+        <button id="btn-mobile-library" class="icon-button" type="button" aria-label="Open your library"><i data-lucide="library"></i></button>
+      </header>
+
+      <section class="hero-section" id="home-view">
+        <div class="hero-copy">
+          <span class="eyebrow">Open music catalog</span>
+          <h2>Stream trending tracks and discover real artists.</h2>
+          <p>Browse music like a modern app: YouTube embed playback with zero login required, artist profiles, genre filters, and playlists.</p>
+          <div class="hero-actions">
+            <button id="btn-play-featured" class="primary-button" type="button"><i data-lucide="play"></i> Play featured</button>
+            <button class="secondary-button" type="button" data-view="search"><i data-lucide="search"></i> Search music</button>
+          </div>
+        </div>
+        <div class="hero-album-stack" aria-hidden="true">
+          <img id="hero-art-main" alt="" />
+          <img id="hero-art-back-a" alt="" />
+          <img id="hero-art-back-b" alt="" />
+        </div>
+      </section>
+
+      <section class="section-block" id="genres-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Browse</span>
+            <h3>Genres</h3>
+          </div>
+          <span id="active-context" class="context-label">Trending now</span>
+        </div>
+        <div id="genre-tabs" class="genre-tabs"></div>
+      </section>
+
+      <div id="artist-header-slot"></div>
+
+      <section class="section-block tracks-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow" id="tracks-kicker">Made for streaming</span>
+            <h3 id="track-heading">Trending tracks</h3>
+          </div>
+          <div class="section-heading-actions">
+            <div id="provider-sort-pills" class="provider-sort-pills" role="tablist" aria-label="Sort tracks by API provider"></div>
+            <button id="btn-play-all" class="ghost-link" type="button"><i data-lucide="list-music"></i> Play queue</button>
+          </div>
+        </div>
+        <div id="track-feed" class="track-list" aria-live="polite"></div>
+      </section>
+
+      <section class="section-block" id="albums-section" style="display: none;">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Discography</span>
+            <h3>Popular Albums & Releases</h3>
+          </div>
+        </div>
+        <div id="album-grid" class="album-grid"></div>
+      </section>
+
+      <section class="section-block artists-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Popular</span>
+            <h3>Artists</h3>
+          </div>
+          <button id="btn-refresh" class="ghost-link" type="button"><i data-lucide="refresh-cw"></i> Refresh</button>
+        </div>
+        <div id="artist-row" class="artist-row"></div>
+      </section>
+    </main>
+
+    <div id="resizer-right" class="sidebar-resizer resizer-right" role="separator" aria-label="Resize right panel" title="Drag to resize right panel"></div>
+
+    <aside class="right-panel" aria-label="Now playing and Multi-Source Music Player">
+      <section class="visualizer-card">
+        <div class="panel-title"><i data-lucide="layers"></i><strong>Multi-Source Player</strong></div>
+        <div class="youtube-player-host official-link-panel">
+          <i data-lucide="music-2"></i>
+          <p>Stream mainstream previews & full-length tracks from Deezer, iTunes, Audius, Jamendo, and SoundCloud.</p>
+        </div>
+        <div class="youtube-player-actions">
+          <button id="btn-add-liked-video" class="btn-add-liked" type="button" aria-label="Add currently playing song to Liked Songs">
+            <i data-lucide="plus"></i> <span>Add to Liked Songs</span>
+          </button>
+          <a id="btn-watch-youtube" class="btn-add-liked secondary-action" href="#" target="_blank" rel="noopener noreferrer" title="Open Source Link">
+            <i data-lucide="external-link"></i> <span>Open Source Link</span>
+          </a>
+        </div>
+        <p class="embed-note">100% native HTML5 audio — no iframe embed errors or login required.</p>
+      </section>
+      <section class="now-card">
+        <span class="eyebrow">Now playing</span>
+        <img id="side-now-art" class="now-art" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&auto=format&fit=crop" alt="Current track artwork" />
+        <h3 id="side-now-title">Select a track</h3>
+        <p id="side-now-artist">Nothing queued yet</p>
+      </section>
+      <section class="limits-card">
+        <div class="panel-title"><i data-lucide="info"></i><strong>4 Music Providers</strong></div>
+        <p>Deezer, iTunes, Jamendo & SoundCloud unified engine.</p>
+      </section>
+    </aside>
+
+    <div id="player-bar" class="player-bar">
+      <div class="player-track-details">
+        <img id="player-thumb" class="player-thumb" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=150&auto=format&fit=crop" alt="Track cover" />
+        <div class="player-track-info">
+          <div id="player-title" class="player-title">Select a track to play</div>
+          <div id="player-artist" class="player-artist">AuraSound</div>
+        </div>
+      </div>
+      <div class="player-center">
+        <div class="player-controls">
+          <button id="btn-shuffle" class="btn-control" type="button" aria-label="Shuffle playlist"><i data-lucide="shuffle"></i></button>
+          <button id="btn-prev" class="btn-control" type="button" aria-label="Previous track"><i data-lucide="skip-back"></i></button>
+          <button id="btn-play-main" class="btn-play-main" type="button" aria-label="Play or pause current track"><i data-lucide="play"></i></button>
+          <button id="btn-next" class="btn-control" type="button" aria-label="Next track"><i data-lucide="skip-forward"></i></button>
+          <button id="btn-repeat" class="btn-control" type="button" aria-label="Repeat playlist"><i data-lucide="repeat"></i></button>
+        </div>
+        <div class="progress-container">
+          <span id="time-current" class="time-stamp">0:00</span>
+          <input type="range" id="seek-bar" class="seek-bar" min="0" max="100" value="0" aria-label="Seek track" />
+          <span id="time-total" class="time-stamp">0:00</span>
+        </div>
+      </div>
+      <div class="player-right">
+        <button id="btn-mute" class="btn-control" type="button" aria-label="Mute or unmute audio"><i data-lucide="volume-2"></i></button>
+        <input type="range" id="volume-bar" class="volume-bar" min="0" max="1" step="0.05" value="0.8" aria-label="Volume" />
+      </div>
+    </div>
+
+    <div id="favorites-drawer" class="modal-backdrop" aria-hidden="true">
+      <div class="drawer-content" role="dialog" aria-modal="true" aria-labelledby="favorites-title">
+        <div class="drawer-header">
+          <div>
+            <span class="eyebrow">Your Library</span>
+            <h3 id="favorites-title">Liked Songs</h3>
+          </div>
+          <button id="btn-close-drawer" class="btn-close" type="button" aria-label="Close library"><i data-lucide="x"></i></button>
+        </div>
+        <div id="drawer-track-list" class="drawer-track-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
