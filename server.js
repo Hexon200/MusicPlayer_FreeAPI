@@ -1,5 +1,4 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 
 const app = express();
 const isStatic = process.argv.includes('--static') || process.env.NODE_ENV === 'production';
@@ -387,7 +386,8 @@ app.get('/api/music/artist/:name', async (req, res) => {
   }
 });
 
-if (isDev) {
+if (isDev && !process.env.VERCEL) {
+  const { createServer: createViteServer } = await import('vite');
   const vite = await createViteServer({
     server: {
       middlewareMode: true,
@@ -397,7 +397,7 @@ if (isDev) {
     appType: 'spa'
   });
   app.use(vite.middlewares);
-} else {
+} else if (!process.env.VERCEL) {
   app.use(express.static('dist'));
   app.get(/.*/, (_req, res) => res.sendFile('index.html', { root: 'dist' }));
 }
